@@ -1,2 +1,1 @@
-# furl
-Remember form state in URL
+# furl: Remember form (and other) state in URL

@@ -1,0 +1,26 @@
+{
+  "name": "furl",
+  "version": "0.0.1",
+  "description": "Remember form state (and other state) in URL",
+  "main": "furl.js",
+  "scripts": {
+    "prepare": "coffee --no-header --bare -c furl.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edemaine/furl.git"
+  },
+  "author": {
+    "name": "Erik Demaine",
+    "email": "edemaine@mit.edu",
+    "url": "http://erikdemaine.org/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/edemaine/furl/issues"
+  },
+  "homepage": "https://github.com/edemaine/furl#readme",
+  "devDependencies": {
+    "coffeescript": "^2.3.1"
+  }
+}

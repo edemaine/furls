@@ -1,0 +1,135 @@
+### TODO:
+ - coalesce multiple inputChange's into single stateChange?
+ - textarea support
+ - text.replace(/\r\n/g, '\r').replace(/\r/g, '\n') necessary?
+###
+
+## Based on jolly.exe's code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+getParameterByName = (name, search) ->
+  ## https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+  name = name.replace /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"
+  regex = new RegExp "[\\?&]#{name}=([^&#]*)"
+  results = regex.exec search
+  return null unless results?
+  decodeURIComponent results[1].replace /\+/g, " "
+
+getInputValue = (dom) ->
+  ## Use .checked for checkboxes and radio buttons, .value for others
+  dom.checked ? dom.value
+
+inputEvents = ['input', 'propertychange', 'click', 'keyup']
+
+setInputValue = (dom, value) ->
+  if dom.checked?
+    ## Convert to Boolean checked for checkboxes and radio buttons
+    switch value
+      when '1', 'true', true
+        value = true
+      when '0', 'false', false
+        value = false
+      else
+        value = !!value
+    dom.checked = value
+  else
+    dom.value = value
+
+class Furl
+  constructor: ->
+    @inputs = []
+    @listeners =
+      stateChange: []
+
+  on: (event, listener) ->
+    @listeners[event].push listener
+  off: (event, listener) ->
+    if 0 <= i = @listeners[event].indexOf listener
+      @listeners[event].splice i, 1
+  trigger: (event, ...args) ->
+    for listener in @listeners[event]
+      listener.call @, ...args
+
+  maybeChange: (input) ->
+    if input.value != (value = getInputValue input.dom)
+      input.value = value
+      @trigger 'inputChange', input
+
+  addInput: (input) ->
+    if typeof input == 'string'
+      input = id: input
+    else if input instanceof HTMLElement
+      input = dom: input
+    unless input.dom?
+      input.dom = document.getElementById input.id
+    unless input.key?
+      input.key = input.id ? input.dom.getAttribute 'id'
+    unless input.defaultValue?
+      input.defaultValue = input.dom.defaultChecked ? input.dom.defaultValue
+    input.value = getInputValue input.dom
+    @inputs.push input
+    input.listeners =
+      for event in inputEvents
+        input.dom.addEventListener event, listener = => @maybeChange input
+        listener
+
+  addInputs: (selector = 'input') ->
+    if typeof selector == 'string'
+      selector = document.querySelectorAll selector
+    for input in selector
+      @addInput input
+
+  clearInputs: ->
+    for input in @inputs
+      for event, i in inputEvents
+        input.dom.removeEventListener event, input.listeners[i]
+    @inputs = []
+
+  getState: ->
+    state = {}
+    for input in @inputs
+      state[input.key] = getInputValue input.dom
+    state
+
+  getSearch: ->
+    '?' + (
+      for input in @inputs
+        value = getInputValue input.dom
+        ## Don't store default values
+        continue if value == input.defaultValue
+        ## Don't store off radio buttons; just need the "on" one
+        continue if input.dom.type == 'radio' and not value
+        switch value
+          when true
+            value = '1'
+          when false
+            value = '0'
+        "#{input.key}=#{encodeURIComponent(value).replace /%20/g, '+'}"
+    ).join '&'
+  getRelativeURL: ->
+    "#{document.location.pathname}#{@getSearch()}"
+
+  loadURL: (url = location) ->
+    if url.search?
+      search = url.search
+    else if url[0] == '?'
+      search = url
+    else
+      search = /\?.*$/.exec(url)[0]
+    ## To handle radio buttons, set all to defaults, then switch to specified.
+    for input in @inputs
+      setInputValue input.dom, input.defaultValue
+    for input in @inputs
+      value = getParameterByName input.key, search
+      if value?
+        setInputValue input.dom, value
+
+  replaceState: (force) ->
+    search = @getSearch()
+    if force or search != document.location.search
+      history.replaceState null, 'furl', "#{document.location.pathname}#{search}"
+  pushState: (force) ->
+    search = @getSearch()
+    if force or search != document.location.search
+      history.pushState null, 'furl', "#{document.location.pathname}#{search}"
+
+module?.exports = Furl
+window?.Furl = Furl
