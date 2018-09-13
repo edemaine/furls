@@ -1,7 +1,5 @@
 ### TODO:
  - coalesce multiple inputChange's into single stateChange?
- - textarea support
- - text.replace(/\r\n/g, '\r').replace(/\r/g, '\n') necessary?
 ###
 
 ## Based on jolly.exe's code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
@@ -17,7 +15,13 @@ getInputValue = (dom) ->
   ## Use .checked for checkboxes and radio buttons, .value for others
   dom.checked ? dom.value
 
-inputEvents = ['input', 'propertychange', 'click', 'keyup']
+## <input>s and <textarea>s should trigger 'input' events during every change,
+## (according to HTML5), and 'change' events when the change is "committed"
+## (for text fields, when losing focus).  In some browsers, checkboxes and
+## radio buttons don't trigger 'input', but they immediately trigger 'change'.
+## So check for both, and just ignore the event if nothing changed.
+getInputEvents = (dom) ->
+  ['input', 'change']
 
 setInputValue = (dom, value) ->
   if dom.checked?
@@ -67,11 +71,11 @@ class Furl
     input.value = getInputValue input.dom
     @inputs.push input
     input.listeners =
-      for event in inputEvents
+      for event in getInputEvents input.dom
         input.dom.addEventListener event, listener = => @maybeChange input
         listener
 
-  addInputs: (selector = 'input') ->
+  addInputs: (selector = 'input, textarea') ->
     if typeof selector == 'string'
       selector = document.querySelectorAll selector
     for input in selector
@@ -79,7 +83,7 @@ class Furl
 
   clearInputs: ->
     for input in @inputs
-      for event, i in inputEvents
+      for event, i in getInputEvents input.dom
         input.dom.removeEventListener event, input.listeners[i]
     @inputs = []
 
