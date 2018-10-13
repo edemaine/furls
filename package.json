@@ -1,14 +1,14 @@
 {
-  "name": "furl",
+  "name": "furls",
   "version": "0.0.1",
-  "description": "Remember form state (and other state) in URL",
-  "main": "furl.js",
+  "description": "Synchronize form state (and other state) with URL",
+  "main": "furls.js",
   "scripts": {
-    "prepare": "coffee --no-header --bare -c furl.coffee"
+    "prepare": "coffee --no-header --bare -c furls.coffee"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/edemaine/furl.git"
+    "url": "git+https://github.com/edemaine/furls.git"
   },
   "author": {
     "name": "Erik Demaine",
@@ -17,9 +17,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/edemaine/furl/issues"
+    "url": "https://github.com/edemaine/furls/issues"
   },
-  "homepage": "https://github.com/edemaine/furl#readme",
+  "homepage": "https://github.com/edemaine/furls#readme",
   "devDependencies": {
     "coffeescript": "^2.3.1"
   }

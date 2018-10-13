@@ -1,1 +1,1 @@
-# furl: Remember form (and other) state in URL
+# furls: Synchronize form state (and other state) with URL
