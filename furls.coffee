@@ -37,7 +37,7 @@ setInputValue = (dom, value) ->
   else
     dom.value = value
 
-class Furl
+class Furls
   constructor: ->
     @inputs = []
     @listeners =
@@ -129,11 +129,11 @@ class Furl
   replaceState: (force) ->
     search = @getSearch()
     if force or search != document.location.search
-      history.replaceState null, 'furl', "#{document.location.pathname}#{search}"
+      history.replaceState null, 'furls', "#{document.location.pathname}#{search}"
   pushState: (force) ->
     search = @getSearch()
     if force or search != document.location.search
-      history.pushState null, 'furl', "#{document.location.pathname}#{search}"
+      history.pushState null, 'furls', "#{document.location.pathname}#{search}"
 
-module?.exports = Furl
-window?.Furl = Furl
+module?.exports = Furls
+window?.Furls = Furls
