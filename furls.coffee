@@ -111,7 +111,7 @@ class Furls
   getRelativeURL: ->
     "#{document.location.pathname}#{@getSearch()}"
 
-  loadURL: (url = location) ->
+  loadURL: (url = document.location) ->
     if url.search?
       search = url.search
     else if url[0] == '?'
