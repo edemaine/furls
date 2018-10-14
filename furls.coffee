@@ -41,12 +41,14 @@ class Furls
       loadURL: []
       inputChange: []
       stateChange: []
-    @inputsChanged = []
+
+    ## Coalesce multiple inputChange events into single stateChange event
+    @inputsChanged = {}
     @on 'inputChange', (input) =>
-      @inputsChanged.push input
+      @inputsChanged[input.key] = input
       window.setTimeout =>
         @trigger 'stateChange', @inputsChanged
-        @inputsChanged = []
+        @inputsChanged = {}
       , 0
 
   on: (event, listener) ->
@@ -63,6 +65,7 @@ class Furls
 
   maybeChange: (input) ->
     if input.value != (value = getInputValue input.dom)
+      input.oldValue = input.value
       input.value = value
       @trigger 'inputChange', input
     @  # for chaining
@@ -141,7 +144,11 @@ class Furls
         setInputValue input.dom, value
       input.value = getInputValue input.dom
     if trigger
-      @trigger 'stateChange', @inputs
+      @inputsChanged = {}
+      for input in @inputs
+        @inputsChanged[input.key] = input
+      @trigger 'stateChange', @inputsChanged
+      @inputsChanged = {}
       @trigger 'loadURL', search
     @loading = false
     @  # for chaining
