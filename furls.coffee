@@ -41,6 +41,7 @@ class Furls
   constructor: ->
     @inputs = []
     @listeners =
+      inputChange: []
       stateChange: []
 
   on: (event, listener) ->
