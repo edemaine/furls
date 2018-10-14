@@ -45,17 +45,21 @@ class Furls
 
   on: (event, listener) ->
     @listeners[event].push listener
+    @  # for chaining
   off: (event, listener) ->
     if 0 <= i = @listeners[event].indexOf listener
       @listeners[event].splice i, 1
+    @  # for chaining
   trigger: (event, ...args) ->
     for listener in @listeners[event]
       listener.call @, ...args
+    @  # for chaining
 
   maybeChange: (input) ->
     if input.value != (value = getInputValue input.dom)
       input.value = value
       @trigger 'inputChange', input
+    @  # for chaining
 
   addInput: (input) ->
     if typeof input == 'string'
@@ -74,18 +78,21 @@ class Furls
       for event in getInputEvents input.dom
         input.dom.addEventListener event, listener = => @maybeChange input
         listener
+    @  # for chaining
 
   addInputs: (selector = 'input, textarea') ->
     if typeof selector == 'string'
       selector = document.querySelectorAll selector
     for input in selector
       @addInput input
+    @  # for chaining
 
   clearInputs: ->
     for input in @inputs
       for event, i in getInputEvents input.dom
         input.dom.removeEventListener event, input.listeners[i]
     @inputs = []
+    @  # for chaining
 
   getState: ->
     state = {}
@@ -125,15 +132,18 @@ class Furls
       value = getParameterByName input.key, search
       if value?
         setInputValue input.dom, value
+    @  # for chaining
 
   replaceState: (force) ->
     search = @getSearch()
     if force or search != document.location.search
       history.replaceState null, 'furls', "#{document.location.pathname}#{search}"
+    @  # for chaining
   pushState: (force) ->
     search = @getSearch()
     if force or search != document.location.search
       history.pushState null, 'furls', "#{document.location.pathname}#{search}"
+    @  # for chaining
 
 module?.exports = Furls
 window?.Furls = Furls
