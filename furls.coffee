@@ -154,5 +154,10 @@ class Furls
       history.pushState null, 'furls', "#{document.location.pathname}#{search}"
     @  # for chaining
 
+  syncState: (state = 'push') ->
+    @on 'stateChange', => @[state+'State']()
+    window.addEventListener 'popstate', => @loadURL()
+    @  # for chaining
+
 module?.exports = Furls
 window?.Furls = Furls
