@@ -138,6 +138,7 @@ class Furls
       value = getParameterByName input.key, search
       if value?
         setInputValue input.dom, value
+      input.value = getInputValue input.dom
     if trigger
       @trigger 'stateChange', @inputs
       @trigger 'loadURL', search
