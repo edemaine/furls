@@ -1,6 +1,3 @@
-### TODO:
- - coalesce multiple inputChange's into single stateChange?
-###
 
 ## Based on jolly.exe's code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 getParameterByName = (name, search) ->
@@ -41,8 +38,16 @@ class Furls
   constructor: ->
     @inputs = []
     @listeners =
+      loadURL: []
       inputChange: []
       stateChange: []
+    @inputsChanged = []
+    @on 'inputChange', (input) =>
+      @inputsChanged.push input
+      window.setTimeout =>
+        @trigger 'stateChange', @inputsChanged
+        @inputsChanged = []
+      , 0
 
   on: (event, listener) ->
     @listeners[event].push listener
@@ -119,7 +124,7 @@ class Furls
   getRelativeURL: ->
     "#{document.location.pathname}#{@getSearch()}"
 
-  loadURL: (url = document.location) ->
+  loadURL: (url = document.location, trigger = true) ->
     if url.search?
       search = url.search
     else if url[0] == '?'
@@ -133,6 +138,9 @@ class Furls
       value = getParameterByName input.key, search
       if value?
         setInputValue input.dom, value
+    if trigger
+      @trigger 'stateChange', @inputs
+      @trigger 'loadURL', search
     @  # for chaining
 
   replaceState: (force) ->
