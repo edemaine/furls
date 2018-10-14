@@ -125,6 +125,7 @@ class Furls
     "#{document.location.pathname}#{@getSearch()}"
 
   loadURL: (url = document.location, trigger = true) ->
+    @loading = true
     if url.search?
       search = url.search
     else if url[0] == '?'
@@ -142,22 +143,22 @@ class Furls
     if trigger
       @trigger 'stateChange', @inputs
       @trigger 'loadURL', search
+    @loading = false
     @  # for chaining
 
-  replaceState: (force) ->
+  setURL: (history = 'push', force) ->
     search = @getSearch()
     if force or search != document.location.search
-      history.replaceState null, 'furls', "#{document.location.pathname}#{search}"
+      window.history[history+'State'] null, 'furls', "#{document.location.pathname}#{search}"
     @  # for chaining
-  pushState: (force) ->
-    search = @getSearch()
-    if force or search != document.location.search
-      history.pushState null, 'furls', "#{document.location.pathname}#{search}"
-    @  # for chaining
+  replaceState: (force) -> @setURL 'replace', force
+  pushState: (force) -> @setURL 'push', force
 
-  syncState: (state = 'push') ->
-    @on 'stateChange', => @[state+'State']()
+  syncState: (history = 'push', loadNow = true) ->
+    @on 'stateChange', =>
+      @setURL history unless @loading
     window.addEventListener 'popstate', => @loadURL()
+    @loadURL() if loadNow
     @  # for chaining
 
 module?.exports = Furls
