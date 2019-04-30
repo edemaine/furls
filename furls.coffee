@@ -8,9 +8,14 @@ getParameterByName = (name, search) ->
   return null unless results?
   decodeURIComponent results[1].replace /\+/g, " "
 
+## Use .checked for checkboxes and radio buttons, .value for others
 getInputValue = (dom) ->
-  ## Use .checked for checkboxes and radio buttons, .value for others
   dom.checked ? dom.value
+setInputValue = (dom, value) ->
+  if dom.checked?
+    dom.checked = value
+  else
+    dom.value = value
 
 ## <input>s and <textarea>s should trigger 'input' events during every change,
 ## (according to HTML5), and 'change' events when the change is "committed"
@@ -63,12 +68,32 @@ class Furls
       listener.call @, ...args
     @  # for chaining
 
+  find: (input) ->
+    ## Support various ways to specify input: internal input object,
+    ## string ID of <input> element, or DOM object of <input> element.
+    if input.dom?  ## Internal interface
+      input
+    else
+      if typeof input == 'string'  ## String ID
+        input = document.getElementById input
+      ## DOM object
+      for inputObj in @inputs
+        if inputObj.dom == input
+          return inputObj
+      throw new Error "Could not find input given #{input}"
+
   maybeChange: (input) ->
+    input = @find input
     if input.value != (value = getInputValue input.dom)
       input.oldValue = input.value
       input.value = value
       @trigger 'inputChange', input
     @  # for chaining
+
+  set: (input, value) ->
+    input = @find input
+    setInputValue input.dom, value
+    @maybeChange input
 
   addInput: (input) ->
     if typeof input == 'string'
