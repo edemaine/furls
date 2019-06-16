@@ -8,11 +8,28 @@ getParameterByName = (name, search) ->
   return null unless results?
   decodeURIComponent results[1].replace /\+/g, " "
 
-## Use .checked for checkboxes and radio buttons, .value for others
+## Use .checked for checkboxes and radio buttons, .value for others.
+## Radio buttons use `undefined` to denote "not checked", to avoid overwriting
+## the correct value from the checked button.
 getInputValue = (dom) ->
-  dom.checked ? dom.value
+  if dom.type == 'radio'
+    if dom.checked
+      dom.value
+  else
+    dom.checked ? dom.value
+
 setInputValue = (dom, value) ->
-  if dom.checked?
+  if dom.type == 'radio'
+    dom.checked = (value == dom.getAttribute 'value')
+  else if dom.checked?
+    ## Convert to Boolean checked for checkboxes
+    switch value
+      when '1', 'true', true
+        value = true
+      when '0', 'false', false
+        value = false
+      else
+        value = !!value
     dom.checked = value
   else
     dom.value = value
@@ -25,23 +42,10 @@ setInputValue = (dom, value) ->
 getInputEvents = (dom) ->
   ['input', 'change']
 
-setInputValue = (dom, value) ->
-  if dom.checked?
-    ## Convert to Boolean checked for checkboxes and radio buttons
-    switch value
-      when '1', 'true', true
-        value = true
-      when '0', 'false', false
-        value = false
-      else
-        value = !!value
-    dom.checked = value
-  else
-    dom.value = value
-
 class Furls
   constructor: ->
     @inputs = []
+    #@inputsByName = {}  # unclear this data structure is worthwhile
     @listeners =
       loadURL: []
       inputChange: []
@@ -50,6 +54,10 @@ class Furls
     ## Coalesce multiple inputChange events into single stateChange event
     @inputsChanged = {}
     @on 'inputChange', (input) =>
+      ## Radio buttons might trigger multiple changes, but we only want to
+      ## store the one that is now checked, to avoid overwriting that one
+      ## with the same name.
+      return unless input.value?
       @inputsChanged[input.name] = input
       clearTimeout @timeout if @timeout?
       @timeout = window.setTimeout =>
@@ -84,12 +92,19 @@ class Furls
           return inputObj
       throw new Error "Could not find input given #{input}"
 
-  maybeChange: (input) ->
+  maybeChange: (input, recurse = true) ->
     input = @findInput input
     if input.value != (value = getInputValue input.dom)
       input.oldValue = input.value
       input.value = value
       @trigger 'inputChange', input
+      ## Auto-trigger change of all inputs with same name: radio buttons get
+      ## events on the clicked button, but not on all the unset buttons.
+      if recurse
+        #for input2 in @inputsByName[input.name] when input != input2
+        for input2 in @inputs
+          if input2.name == input.name and input != input2
+            @maybeChange input2, false
     @  # for chaining
 
   set: (input, value) ->
@@ -104,12 +119,20 @@ class Furls
       input = dom: input
     unless input.dom?
       input.dom = document.getElementById input.id
-    unless input.key?
-      input.key = input.id ? input.dom.getAttribute 'id'
+    unless input.id?
+      input.id = input.dom.getAttribute 'id'
+    unless input.name?
+      input.name = input.dom.getAttribute('name') ? input.id
     unless input.defaultValue?
-      input.defaultValue = input.dom.defaultChecked ? input.dom.defaultValue
+      input.defaultValue =
+        if input.dom.type == 'radio'
+          if input.dom.defaultChecked
+            input.dom.getAttribute 'value'
+        else
+          input.dom.defaultChecked ? input.dom.defaultValue
     input.value = getInputValue input.dom
     @inputs.push input
+    #(@inputsByName[input.name] ?= []).push input
     input.listeners =
       for event in getInputEvents input.dom
         input.dom.addEventListener event, listener = => @maybeChange input
@@ -128,12 +151,16 @@ class Furls
       for event, i in getInputEvents input.dom
         input.dom.removeEventListener event, input.listeners[i]
     @inputs = []
+    #@inputsByName = {}
     @  # for chaining
 
   getState: ->
     state = {}
     for input in @inputs
-      state[input.key] = getInputValue input.dom
+      value = getInputValue input.dom
+      ## Avoid overwriting the correct value for radio buttons sharing a name
+      if value?
+        state[input.name] = value
     state
 
   getSearch: ->
@@ -143,13 +170,14 @@ class Furls
         ## Don't store default values
         continue if value == input.defaultValue
         ## Don't store off radio buttons; just need the "on" one
-        continue if input.dom.type == 'radio' and not value
+        continue unless value?
+        ## Stringify booleans for checkboxes
         switch value
           when true
             value = '1'
           when false
             value = '0'
-        "#{input.key}=#{encodeURIComponent(value).replace /%20/g, '+'}"
+        "#{input.name}=#{encodeURIComponent(value).replace /%20/g, '+'}"
     ).join '&'
   getRelativeURL: ->
     "#{document.location.pathname}#{@getSearch()}"
@@ -162,18 +190,20 @@ class Furls
       search = url
     else
       search = /\?.*$/.exec(url)[0]
-    ## To handle radio buttons, set all to defaults, then switch to specified.
+    ## Reset everything to defaults before loading new values, because we
+    ## only put deviation from defaults in the URL.
     for input in @inputs
       setInputValue input.dom, input.defaultValue
     for input in @inputs
-      value = getParameterByName input.key, search
+      value = getParameterByName input.name, search
       if value?
         setInputValue input.dom, value
+    for input in @inputs
       input.value = getInputValue input.dom
     if trigger
       @inputsChanged = {}
       for input in @inputs
-        @inputsChanged[input.key] = input
+        @inputsChanged[input.name] = input
       @trigger 'stateChange', @inputsChanged
       @inputsChanged = {}
       @trigger 'loadURL', search

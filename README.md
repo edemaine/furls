@@ -13,8 +13,8 @@ update = (changed) ->
   ## @ is the furls instance
   if changed.foo
     console.log "foo changed from #{changed.foo.oldValue} to #{changed.foo.value}"
-  for key, value of @getState()  # mapping of ids to values
-    console "#{key} is currently #{value}"
+  for name, value of @getState()  # mapping of names/ids to values
+    console "#{name} is currently #{value}"
 
 furls = new Furls()        # create input handler
 .addInputs()               # auto-add all inputs
@@ -65,9 +65,11 @@ or Furls' internal representation of the input (see below).
   URL's search component to match the state of the inputs.  `history` can be
   `push` or `replace` as in `.syncState()`.  If you want to push the current
   state even if the state hasn't changed, set `force` to `true`.
-* `.getState()`: Return object `state` with attribute `state[id]` for
-  each input with ID `id` equal to the value of the input
+* `.getState()`: Return object `state` with attribute `state[name]` for
+  each input with that `name` equal to the value of the input
   (from the `checked` or `value` attribute).
+  For each group of radio buttons, this object stores a single mapping from
+  the group's `name` to the selected button's `value` (like HTML forms).
 * `.getSearch()`: Return state in URL search format (`?key=value&...`).
 * `.getRelativeURL`: Return URL to self (`document.location.pathname`)
   with search given by `.getSearch()`.
@@ -79,26 +81,35 @@ or Furls' internal representation of the input (see below).
 * `.trigger(event, ...)`: Force `event` to occur with specified arguments.
   (You probably shouldn't need this.)
 
-There are currently three types of events that occur:
+There are currently two types of events that occur:
 
 * `inputChange`: An input changed in value.  (Null changes don't count.)
   Argument is the internal representation of the input (see below).
 * `stateChange`: One or more inputs changed in value, aggregating together
-  potentially several `inputChange` events`.
+  potentially several `inputChange` events` (e.g. when loading from URL).
   (Null changes don't count.)  Argument is an object `changed`
-  with an attribute `changed[id]` for each changed input having ID `id`,
+  with an attribute `changed[name]` for each changed input with that `name`,
   giving the internal representation of the input (see below).
+  When a radio button changes, `changed[name]` will be the newly selected
+  radio button (excluding all other buttons with the same `name` i.e. group).
 
 ### Inputs
 
 The internal representation of an input is an object with (at least)
 the following attributes:
 
-* `.id`: String ID of the `<input>` element
+* `.id`: `id` attribute of the `<input>` element (should be unique)
+* `.name`: `name` attribute of the `<input>` element, or else its `id`
+  (differs from `id` for radio buttons, where `name` defines groups).
+  This is the key for the state object returned by `.getState()`,
+  and what ends up in the URL.
 * `.dom`: The DOM object of the `<input>` element
 * `.defaultValue`: The specified default value of the `<input>` element
   (from the `defaultChecked` or `defaultValue` attribute)
 * `.value`: Current value of the `<input>` element
-  (from the `checked` or `value` attribute)
+  (from the `checked` or `value` attribute).
+  For checkboxes, this is `true` or `false`.
+  For radio buttons, this is the `value` attribute if selected, and
+  `undefined` if not selected.
 * `.oldValue`: The previous value of the `<input>` element
   (in particular during change events)
