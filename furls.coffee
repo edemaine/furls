@@ -50,8 +50,10 @@ class Furls
     ## Coalesce multiple inputChange events into single stateChange event
     @inputsChanged = {}
     @on 'inputChange', (input) =>
-      @inputsChanged[input.key] = input
-      window.setTimeout =>
+      @inputsChanged[input.name] = input
+      clearTimeout @timeout if @timeout?
+      @timeout = window.setTimeout =>
+        return if (key for key of @inputsChanged).length == 0
         @trigger 'stateChange', @inputsChanged
         @inputsChanged = {}
       , 0
