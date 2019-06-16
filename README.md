@@ -43,7 +43,7 @@ or Furls' internal representation of the input (see below).
 * `.maybeChange(input)`: Check whether the value of `input` has changed,
   and trigger change events if appropriate.  (In case the DOM's `value`
   attribute changed manually without calling `.set`.)
-* `.find(input)`: Get the internal representation of the specified input.
+* `.findInput(input)`: Get the internal representation of the specified input.
 
 ### States
 

@@ -68,7 +68,7 @@ class Furls
       listener.call @, ...args
     @  # for chaining
 
-  find: (input) ->
+  findInput: (input) ->
     ## Support various ways to specify input: internal input object,
     ## string ID of <input> element, or DOM object of <input> element.
     if input.dom?  ## Internal interface
@@ -83,7 +83,7 @@ class Furls
       throw new Error "Could not find input given #{input}"
 
   maybeChange: (input) ->
-    input = @find input
+    input = @findInput input
     if input.value != (value = getInputValue input.dom)
       input.oldValue = input.value
       input.value = value
@@ -91,7 +91,7 @@ class Furls
     @  # for chaining
 
   set: (input, value) ->
-    input = @find input
+    input = @findInput input
     setInputValue input.dom, value
     @maybeChange input
 
