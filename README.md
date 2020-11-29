@@ -86,7 +86,7 @@ There are currently two types of events that occur:
 * `inputChange`: An input changed in value.  (Null changes don't count.)
   Argument is the internal representation of the input (see below).
 * `stateChange`: One or more inputs changed in value, aggregating together
-  potentially several `inputChange` events` (e.g. when loading from URL).
+  potentially several `inputChange` events (e.g. when loading from URL).
   (Null changes don't count.)  Argument is an object `changed`
   with an attribute `changed[name]` for each changed input with that `name`,
   giving the internal representation of the input (see below).
