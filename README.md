@@ -2,11 +2,17 @@
 
 ## Basic Usage
 
-Include `<script src="furls.js">` to define a global `window.Furls`,
-or if you're using a build system supporting modules via `require`,
+To define a global `window.Furls`, include `<script src="furls.js"></script>`
+in your HTML, via either:
+
+* Local `npm install furls` and use
+ `<script src="node_modules/furls/furls.js></script>`
+* CDN `<script src="https://cdn.jsdelivr.net/npm/furls/furls.js"></script>`
+
+If you're using a build system supporting NPM modules via `require`,
 use `Furls = require('furls')`.
 
-CoffeeScript:
+Simple example of usage in [CoffeeScript](https://coffeescript.org):
 
 ```coffee
 update = (changed) ->
@@ -14,7 +20,7 @@ update = (changed) ->
   if changed.foo
     console.log "foo changed from #{changed.foo.oldValue} to #{changed.foo.value}"
   for name, value of @getState()  # mapping of names/ids to values
-    console "#{name} is currently #{value}"
+    console.log "#{name} is currently #{value}"
 
 furls = new Furls()        # create input handler
 .addInputs()               # auto-add all inputs
