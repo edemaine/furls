@@ -12,27 +12,42 @@ getParameterByName = (name, search) ->
 ## Radio buttons use `undefined` to denote "not checked", to avoid overwriting
 ## the correct value from the checked button.
 getInputValue = (dom) ->
-  if dom.type == 'radio'
-    if dom.checked
+  switch dom.type
+    when 'radio'
+      if dom.checked
+        dom.value
+    when 'checkbox'
+      dom.checked
+    else
       dom.value
-  else
-    dom.checked ? dom.value
+
+getDefaultInputValue = (dom) ->
+  switch dom.type
+    when 'radio'
+      if dom.defaultChecked
+        # dom.value only works when dom.checked is true
+        dom.getAttribute 'value'
+    when 'checkbox'
+      dom.defaultChecked
+    else
+      dom.defaultValue
 
 setInputValue = (dom, value) ->
-  if dom.type == 'radio'
-    dom.checked = (value == dom.getAttribute 'value')
-  else if dom.checked?
-    ## Convert to Boolean checked for checkboxes
-    switch value
-      when '1', 'true', true
-        value = true
-      when '0', 'false', false
-        value = false
-      else
-        value = !!value
-    dom.checked = value
-  else
-    dom.value = value
+  switch dom.type
+    when 'radio'
+      dom.checked = (value == dom.getAttribute 'value')
+    when 'checkbox'
+      ## Convert to Boolean checked for checkboxes
+      switch value
+        when '1', 'true', true
+          value = true
+        when '0', 'false', false
+          value = false
+        else
+          value = !!value
+      dom.checked = value
+    else
+      dom.value = value
 
 ## <input>s and <textarea>s should trigger 'input' events during every change,
 ## (according to HTML5), and 'change' events when the change is "committed"
@@ -124,12 +139,7 @@ class Furls
     unless input.name?
       input.name = input.dom.getAttribute('name') ? input.id
     unless input.defaultValue?
-      input.defaultValue =
-        if input.dom.type == 'radio'
-          if input.dom.defaultChecked
-            input.dom.getAttribute 'value'
-        else
-          input.dom.defaultChecked ? input.dom.defaultValue
+      input.defaultValue = getDefaultInputValue input.dom
     input.value = getInputValue input.dom
     @inputs.push input
     #(@inputsByName[input.name] ?= []).push input
