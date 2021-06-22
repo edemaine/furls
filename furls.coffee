@@ -161,13 +161,29 @@ class Furls
       @addInput input
     @  # for chaining
 
-  clearInputs: ->
-    for input in @inputs
-      for event, i in @getInputEvents input
-        input.dom.removeEventListener event, input.listeners[i]
-    @inputs = []
-    #@inputsByName = {}
+  removeInput: (input) ->
+    input = @findInput input
+    for event, i in @getInputEvents input
+      input.dom.removeEventListener event, input.listeners[i]
+    if @_syncClass? and target.value?
+      for target in @_syncClass.selector
+        target.classList.remove "#{@_syncClass.prefix}#{input.name}-#{input.value}"
     @  # for chaining
+  removeInputs: (selector) ->
+    if typeof selector == 'string'
+      selector = document.querySelectorAll selector
+    else if not Array.isArray selector
+      selector = [selector]
+    @inputs =
+      for input in @inputs
+        if input in selector or input.dom in selector
+          @removeInput input
+          continue
+        else
+          input
+    @  # for chaining
+  clearInputs: ->
+    @removeInputs @inputs
 
   getState: ->
     state = {}
@@ -249,7 +265,7 @@ class Furls
               updateNow = true) ->
     if typeof selector == 'string'
       selector = document.querySelectorAll selector
-    else if selector instanceof HTMLElement
+    else if not Array.isArray selector
       selector = [selector]
     @on 'inputChange', (input) =>
       if @discreteValue input
@@ -261,6 +277,7 @@ class Furls
         if @discreteValue input
           for target in selector
             target.classList.add "#{prefix}#{input.name}-#{input.value}"
+    @_syncClass = {selector, prefix}
     @  # for chaining
 
 module?.exports = Furls

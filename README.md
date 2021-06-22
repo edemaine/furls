@@ -47,13 +47,16 @@ furls = new Furls()        # create input handler
 ### Inputs
 
 `<input>` elements can generally be specified by string ID, DOM element,
-or Furls' internal representation of the input (see below).
+or furls' internal representation of the input (see below).
 
 * `.addInput(input)`: Start tracking the specified input.
 * `.addInputs(query = 'input, textarea')`: Start tracking all inputs matching
   the specified query selector (a valid input to `document.querySelectorAll`).
   The default `query` includes all `<input>` and `<textarea>` elements
   in the document.
+* `.removeInput(input)`: Stop tracking the specified input.
+* `.removeInputs(query)`: Stop tracking all matching inputs.
+  Sometimes it's easier to specify what not to track than what to track.
 * `.clearInputs()`: Stop tracking all inputs.
 * `.set(input, value)`: Set the value of `input` to `value` as if the user
   did, triggering change events if appropriate.  (Note that manually setting
