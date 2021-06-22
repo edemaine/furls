@@ -136,6 +136,11 @@ class Furls
       input.dom = document.getElementById input.id
     unless input.id?
       input.id = input.dom.getAttribute 'id'
+    unless input.type?
+      input.type =
+        switch input.dom.tagName.toUpperCase()
+          when 'TEXTAREA' then 'textarea'
+          when 'INPUT' then input.dom.getAttribute 'type'
     unless input.name?
       input.name = input.dom.getAttribute('name') ? input.id
     unless input.defaultValue?

@@ -104,12 +104,14 @@ There are currently two types of events that occur:
   When a radio button changes, `changed[name]` will be the newly selected
   radio button (excluding all other buttons with the same `name` i.e. group).
 
-### Inputs
+### Input Objects
 
 The internal representation of an input is an object with (at least)
 the following attributes:
 
 * `.id`: `id` attribute of the `<input>` element (should be unique)
+* `.type`: `type` attribute of the `<input>` element, or `"textarea"`
+  in the case of `<textarea>` elements.
 * `.name`: `name` attribute of the `<input>` element, or else its `id`
   (differs from `id` for radio buttons, where `name` defines groups).
   This is the key for the state object returned by `.getState()`,
