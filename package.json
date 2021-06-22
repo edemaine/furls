@@ -4,7 +4,7 @@
   "description": "Synchronize form state (and other state) with URL",
   "main": "furls.js",
   "scripts": {
-    "prepare": "coffee --no-header --bare -c furls.coffee"
+    "prepare": "coffee -c furls.coffee"
   },
   "repository": {
     "type": "git",
