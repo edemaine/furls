@@ -1,5 +1,16 @@
 # furls: Synchronize form state (and other state) with URL
 
+The furls library makes it easy to synchronize form state (e.g. checkboxes,
+radio buttons, and text/textarea inputs) with the query part of the page's URL.
+This makes it easy to bookmark/share/link the current state of a web app, and
+makes the browser's back button act as an undo action.
+The library can also synchronize the classes of a particular element to
+represent the form state, making it easy to customize styles in response to
+form state.
+For examples of furls in action, see
+[the font-webapp library](https://github.com/edemaine/font-webapp)
+which builds upon it.
+
 ## Basic Usage
 
 To define a global `window.Furls`, include `<script src="furls.js"></script>`
@@ -26,6 +37,7 @@ furls = new Furls()        # create input handler
 .addInputs()               # auto-add all inputs
 .on 'stateChange', update  # call update(changed) when any input changes
 .syncState()               # auto-keep URL's search in sync with form state
+.syncClass()               # auto-keep <html>'s class in sync with form state
 ```
 
 ## API
@@ -56,7 +68,7 @@ or Furls' internal representation of the input (see below).
   events.  Redundant events are coalesced so they generate only one furls
   `inputChange` events.
 
-### States
+### States / URL Synchronization
 
 * `.syncState(history = 'push', loadNow = true)`: Automatically keep the
   document's URL's search component in sync with the state of the inputs.
@@ -84,6 +96,19 @@ or Furls' internal representation of the input (see below).
 * `.getSearch()`: Return state in URL search format (`?key=value&...`).
 * `.getRelativeURL`: Return URL to self (`document.location.pathname`)
   with search given by `.getSearch()`.
+
+## Class Synchronization
+
+* `.syncClass(query = ':root', prefix = '', updateNow = true)`:
+  Synchronizes the `classList` of the specified DOM `query` (which can also
+  be just a DOM element or an array of DOM elements) to match the state of
+  all "discrete" tracked inputs.  Classes are of the form `NAME-VALUE`,
+  prefixed by `prefix`; for example, a checkbox with name `box` can be tested
+  with CSS queries `.box-true` and `.box-false`.
+* `.discreteValue(input)`: Returns whether the given input has a "discrete"
+  value, and thus `.syncClass` will synchronize its class.
+  By default, this includes all inputs of type `"checkbox"` and `"radio"`,
+  but you could override it to include a different subset of inputs.
 
 ### Events
 

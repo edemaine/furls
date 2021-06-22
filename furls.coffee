@@ -240,5 +240,28 @@ class Furls
     @loadURL() if loadNow
     @  # for chaining
 
+  ## Which types have discrete values like `true` and `false`, and thus are
+  ## appropriate for classes.
+  discreteValue: (input) ->
+    input.type in ['checkbox', 'radio']
+
+  syncClass: (selector = [document.documentElement], prefix = '',
+              updateNow = true) ->
+    if typeof selector == 'string'
+      selector = document.querySelectorAll selector
+    else if selector instanceof HTMLElement
+      selector = [selector]
+    @on 'inputChange', (input) =>
+      if @discreteValue input
+        for target in selector
+          target.classList.remove "#{prefix}#{input.name}-#{input.oldValue}" if input.oldValue?
+          target.classList.add "#{prefix}#{input.name}-#{input.value}" if input.value?
+    if updateNow
+      for input in @inputs when input.value?
+        if @discreteValue input
+          for target in selector
+            target.classList.add "#{prefix}#{input.name}-#{input.value}"
+    @  # for chaining
+
 module?.exports = Furls
 window?.Furls = Furls
