@@ -50,6 +50,11 @@ or Furls' internal representation of the input (see below).
   and trigger change events if appropriate.  (In case the DOM's `value`
   attribute changed manually without calling `.set`.)
 * `.findInput(input)`: Get the internal representation of the specified input.
+* `.getInputEvents(input)`: Returns which events to monitor for input `input`.
+  Defaults to `['input', 'change']`, which should cover all input types on all
+  browsers, but you could override this function to listen for custom DOM
+  events.  Redundant events are coalesced so they generate only one furls
+  `inputChange` events.
 
 ### States
 

@@ -49,14 +49,6 @@ setInputValue = (dom, value) ->
     else
       dom.value = value
 
-## <input>s and <textarea>s should trigger 'input' events during every change,
-## (according to HTML5), and 'change' events when the change is "committed"
-## (for text fields, when losing focus).  In some browsers, checkboxes and
-## radio buttons don't trigger 'input', but they immediately trigger 'change'.
-## So check for both, and just ignore the event if nothing changed.
-getInputEvents = (dom) ->
-  ['input', 'change']
-
 class Furls
   constructor: ->
     @inputs = []
@@ -127,6 +119,14 @@ class Furls
     setInputValue input.dom, value
     @maybeChange input
 
+  ## <input>s and <textarea>s should trigger 'input' events during every change,
+  ## (according to HTML5), and 'change' events when the change is "committed"
+  ## (for text fields, when losing focus).  In some browsers, checkboxes and
+  ## radio buttons don't trigger 'input', but they immediately trigger 'change'.
+  ## So check for both, and just ignore the event if nothing changed.
+  getInputEvents: (input) ->
+    ['input', 'change']
+
   addInput: (input) ->
     if typeof input == 'string'
       input = id: input
@@ -144,7 +144,7 @@ class Furls
     @inputs.push input
     #(@inputsByName[input.name] ?= []).push input
     input.listeners =
-      for event in getInputEvents input.dom
+      for event in @getInputEvents input
         input.dom.addEventListener event, listener = => @maybeChange input
         listener
     @  # for chaining
@@ -158,7 +158,7 @@ class Furls
 
   clearInputs: ->
     for input in @inputs
-      for event, i in getInputEvents input.dom
+      for event, i in @getInputEvents input
         input.dom.removeEventListener event, input.listeners[i]
     @inputs = []
     #@inputsByName = {}
