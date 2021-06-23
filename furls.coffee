@@ -211,9 +211,9 @@ class Furls
         "#{input.name}=#{encodeURIComponent(value).replace /%20/g, '+'}"
     ).join '&'
   getRelativeURL: ->
-    "#{document.location.pathname}#{@getSearch()}"
+    "#{window.location.pathname}#{@getSearch()}"
 
-  loadURL: (url = document.location, trigger = true) ->
+  loadURL: (url = window.location, trigger = true) ->
     @loading = true
     if url.search?
       search = url.search
@@ -243,8 +243,8 @@ class Furls
 
   setURL: (history = 'push', force) ->
     search = @getSearch()
-    if force or search != document.location.search
-      window.history[history+'State'] null, 'furls', "#{document.location.pathname}#{search}"
+    if force or search != window.location.search
+      window.history[history+'State'] null, 'furls', "#{window.location.pathname}#{search}"
     @  # for chaining
   replaceState: (force) -> @setURL 'replace', force
   pushState: (force) -> @setURL 'push', force
