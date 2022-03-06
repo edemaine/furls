@@ -114,6 +114,8 @@ class Furls
             @maybeChange input2, false
     @  # for chaining
 
+  get: (input) ->
+    @findInput(input).value
   set: (input, value) ->
     input = @findInput input
     setInputValue input.dom, value

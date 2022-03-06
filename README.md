@@ -58,6 +58,7 @@ or furls' internal representation of the input (see below).
 * `.removeInputs(query)`: Stop tracking all matching inputs.
   Sometimes it's easier to specify what not to track than what to track.
 * `.clearInputs()`: Stop tracking all inputs.
+* `.get(input)`: Get the value of `input` (as convenient short-hand).
 * `.set(input, value)`: Set the value of `input` to `value` as if the user
   did, triggering change events if appropriate.  (Note that manually setting
   a DOM's `value` attribute does *not* trigger events, so use this instead.)
