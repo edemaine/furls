@@ -32,6 +32,8 @@ getDefaultInputValue = (dom) ->
         dom.getAttribute 'value'
     when 'checkbox'
       dom.defaultChecked
+    when 'number'
+      parseFloat dom.defaultValue
     else
       dom.defaultValue
 
