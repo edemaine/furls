@@ -11,6 +11,7 @@ getParameterByName = (name, search) ->
 ## Use .checked for checkboxes and radio buttons, .value for others.
 ## Radio buttons use `undefined` to denote "not checked", to avoid overwriting
 ## the correct value from the checked button.
+## Automatically parse value for type=number.
 getInputValue = (dom) ->
   switch dom.type
     when 'radio'
@@ -18,6 +19,8 @@ getInputValue = (dom) ->
         dom.value
     when 'checkbox'
       dom.checked
+    when 'number'
+      parseFloat dom.value
     else
       dom.value
 

@@ -153,5 +153,6 @@ the following attributes:
   For checkboxes, this is `true` or `false`.
   For radio buttons, this is the `value` attribute if selected, and
   `undefined` if not selected.
+  For `type=number` inputs, this is automatically parsed into a Number.
 * `.oldValue`: The previous value of the `<input>` element
   (in particular during change events)
