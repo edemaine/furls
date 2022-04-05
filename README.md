@@ -132,6 +132,11 @@ There are currently two types of events that occur:
   giving the internal representation of the input (see below).
   When a radio button changes, `changed[name]` will be the newly selected
   radio button (excluding all other buttons with the same `name` i.e. group).
+  Triggered after individual `inputChange` events.
+* `'loadURL'`: All input values were just loaded from the URL (caused by
+  `syncState` from browser navigation or initial loading on startup, or
+  from calling `loadURL` manually).  Argument is the URL's search component.
+  Trigger after `inputChange` and `stateChange` events.
 
 ### Input Objects
 
