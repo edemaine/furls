@@ -229,7 +229,7 @@ class Furls
     else if url[0] == '?'
       search = url
     else
-      search = /\?.*$/.exec(url)[0]
+      search = /\?.*$/.exec(url)?[0] ? ''
     ## Reset everything to defaults before loading new values, because we
     ## only put deviation from defaults in the URL.
     for input in @inputs
