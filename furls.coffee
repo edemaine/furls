@@ -202,7 +202,7 @@ class Furls
     state
 
   getSearch: ->
-    '?' + (
+    search = (
       for input in @inputs
         value = getInputValue input.dom
         ## Don't store default values
@@ -217,6 +217,8 @@ class Furls
             value = '0'
         "#{input.name}=#{encodeURIComponent(value).replace /%20/g, '+'}"
     ).join '&'
+    search = "?#{search}" if search
+    search
   getRelativeURL: ->
     "#{window.location.pathname}#{@getSearch()}"
 
