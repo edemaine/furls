@@ -1,3 +1,4 @@
+queueMicrotask = window?.queueMicrotask ? (e) -> setTimeout e, 0
 
 ## Based on jolly.exe's code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 getParameterByName = (name, search) ->
@@ -71,12 +72,13 @@ class Furls
       ## with the same name.
       return unless input.value?
       @inputsChanged[input.name] = input
-      @timeout ?= window.setTimeout =>
-        @timeout = null
-        return if (key for key of @inputsChanged).length == 0
-        @trigger 'stateChange', @inputsChanged
-        @inputsChanged = {}
-      , 0
+      unless @microtask
+        @microtask = true
+        queueMicrotask =>
+          @microtask = false
+          return if (key for key of @inputsChanged).length == 0
+          @trigger 'stateChange', @inputsChanged
+          @inputsChanged = {}
 
   on: (event, listener) ->
     @listeners[event].push listener
@@ -248,7 +250,7 @@ class Furls
       @maybeChange input, false, trigger
     @trigger 'loadURL', search
     ## Schedule after possibly triggered stateChange event.
-    setTimeout (=> @loading = false), 0
+    queueMicrotask => @loading = false
     @  # for chaining
 
   setURL: (history = 'push', force) ->
