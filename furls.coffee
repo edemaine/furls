@@ -71,8 +71,8 @@ class Furls
       ## with the same name.
       return unless input.value?
       @inputsChanged[input.name] = input
-      clearTimeout @timeout if @timeout?
-      @timeout = window.setTimeout =>
+      @timeout ?= window.setTimeout =>
+        @timeout = null
         return if (key for key of @inputsChanged).length == 0
         @trigger 'stateChange', @inputsChanged
         @inputsChanged = {}
@@ -104,12 +104,12 @@ class Furls
           return inputObj
       throw new Error "Could not find input given #{input}"
 
-  maybeChange: (input, recurse = true) ->
+  maybeChange: (input, recurse = true, trigger = true) ->
     input = @findInput input
     if input.value != (value = getInputValue input.dom)
       input.oldValue = input.value
       input.value = value
-      @trigger 'inputChange', input
+      @trigger 'inputChange', input if trigger
       ## Auto-trigger change of all inputs with same name: radio buttons get
       ## events on the clicked button, but not on all the unset buttons.
       if recurse
@@ -230,24 +230,25 @@ class Furls
       search = url
     else
       search = /\?.*$/.exec(url)?[0] ? ''
-    ## Reset everything to defaults before loading new values, because we
-    ## only put deviation from defaults in the URL.
+    ## Reset all inputs to defaults before loading new values, because we
+    ## only put deviation from defaults in the URL.  This needs to be in a
+    ## separate stage because of checkboxes.
     for input in @inputs
       setInputValue input.dom, input.defaultValue
     for input in @inputs
       value = getParameterByName input.name, search
       if value?
         setInputValue input.dom, value
+      else
+        setInputValue input.dom, input.defaultValue
+    ## Update values and oldValues, and optionally trigger inputChange events
+    ## which trigger a stateChange event.
     for input in @inputs
-      input.value = getInputValue input.dom
-    if trigger
-      @inputsChanged = {}
-      for input in @inputs
-        @inputsChanged[input.name] = input
-      @trigger 'stateChange', @inputsChanged
-      @inputsChanged = {}
-      @trigger 'loadURL', search
-    @loading = false
+      ## Don't recurse on identically named inputs, as we process all inputs.
+      @maybeChange input, false, trigger
+    @trigger 'loadURL', search
+    ## Schedule after possibly triggered stateChange event.
+    setTimeout (=> @loading = false), 0
     @  # for chaining
 
   setURL: (history = 'push', force) ->
@@ -262,7 +263,10 @@ class Furls
     @on 'stateChange', =>
       @setURL history unless @loading
     window.addEventListener 'popstate', => @loadURL()
-    @loadURL() if loadNow
+    ## On initial load, treat as transition from undefined values to defaults.
+    if loadNow
+      input.value = undefined for input in @inputs
+      @loadURL()
     @  # for chaining
 
   ## Which types have discrete values like `true` and `false`, and thus are
