@@ -49,7 +49,7 @@ furls = new Furls()        # create input handler
 `<input>` elements can generally be specified by string ID, DOM element,
 or furls' internal representation of the input (see below).
 
-* `.addInput(input, [options])`: Start tracking the specified input.
+* `.addInput(input, options = {})`: Start tracking the specified input.
   Optionally, you can specify manual `encode` and `decode` methods,
   as described under [Input Objects](#input-objects).
 * `.addInputs(query = 'input, textarea')`: Start tracking all inputs matching
@@ -139,6 +139,30 @@ There are currently two types of events that occur:
   `syncState` from browser navigation or initial loading on startup, or
   from calling `loadURL` manually).  Argument is the URL's search component.
   Trigger after `inputChange` and `stateChange` events.
+
+### Helpers
+
+You're unlikely to need these functions, unless you're being clever.
+You can override them, however, to get custom behaviors.
+
+* `getParameterByName(name, search = window.location.search)`:
+  Returns the value from any `name=value` in the specified URL search string.
+  In most cases, you should use `loadURL` which calls this repeatedly.
+* `getInputValue(dom)`: Given an `input` DOM object, computes its current
+  `value` in the format described under [Input Objects](#input-objects).
+  In most cases, you should use `.get` to get the current value.
+* `getInputDefaultValue(dom)`: Given an `input` DOM object, computes its
+  default `value` in the format described under [Input Objects](#input-objects).
+  In most cases, you should use `.findInput` and `.defaultValue`.
+* `setInputValue(dom, value)`: Given an `input` DOM object, sets its `value`
+  according to a given value in the format described under
+  [Input Objects](#input-objects), without triggering any events.
+  In most cases, you should use `.set` to set the value of an input,
+  which also triggers the relevant events.
+* `queueMicrotask(task)`: Schedules to call `task` before next browser render,
+  if [`window.queueMicrotask`](https://developer.mozilla.org/en-US/docs/Web/API/queueMicrotask)
+  is available.  As a fallback, runs `task` after the next browser render
+  via `setTimeout(task, 0)`.
 
 ### Input Objects
 

@@ -1,60 +1,3 @@
-queueMicrotask = window?.queueMicrotask ? (e) -> setTimeout e, 0
-
-## Based on jolly.exe's code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
-getParameterByName = (name, search) ->
-  ## https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-  name = name.replace /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"
-  regex = new RegExp "[\\?&]#{name}=([^&#]*)"
-  results = regex.exec search
-  return null unless results?
-  decodeURIComponent results[1].replace /\+/g, " "
-
-## Use .checked for checkboxes and radio buttons, .value for others.
-## Radio buttons use `undefined` to denote "not checked", to avoid overwriting
-## the correct value from the checked button.
-## Automatically parse value for type=number.
-getInputValue = (dom) ->
-  switch dom.type
-    when 'radio'
-      if dom.checked
-        dom.value
-    when 'checkbox'
-      dom.checked
-    when 'number'
-      parseFloat dom.value
-    else
-      dom.value
-
-getDefaultInputValue = (dom) ->
-  switch dom.type
-    when 'radio'
-      if dom.defaultChecked
-        # dom.value only works when dom.checked is true
-        dom.getAttribute 'value'
-    when 'checkbox'
-      dom.defaultChecked
-    when 'number'
-      parseFloat dom.defaultValue
-    else
-      dom.defaultValue
-
-setInputValue = (dom, value) ->
-  switch dom.type
-    when 'radio'
-      dom.checked = (value == dom.getAttribute 'value')
-    when 'checkbox'
-      ## Convert to Boolean checked for checkboxes
-      switch value
-        when '1', 'true', true
-          value = true
-        when '0', 'false', false
-          value = false
-        else
-          value = !!value
-      dom.checked = value
-    else
-      dom.value = value
-
 class Furls
   constructor: ->
     @inputs = []
@@ -74,11 +17,17 @@ class Furls
       @inputsChanged[input.name] = input
       unless @microtask
         @microtask = true
-        queueMicrotask =>
+        @queueMicrotask =>
           @microtask = false
           return if (key for key of @inputsChanged).length == 0
           @trigger 'stateChange', @inputsChanged
           @inputsChanged = {}
+
+  queueMicrotask: (task) ->
+    if window?.queueMicrotask?
+      window.queueMicrotask task
+    else
+      setTimeout task, 0
 
   on: (event, listener) ->
     @listeners[event].push listener
@@ -106,9 +55,55 @@ class Furls
           return inputObj
       throw new Error "Could not find input given #{input}"
 
+  ## Use .checked for checkboxes and radio buttons, .value for others.
+  ## Radio buttons use `undefined` to denote "not checked", to avoid overwriting
+  ## the correct value from the checked button.
+  ## Automatically parse value for type=number.
+  getInputValue: (dom) ->
+    switch dom.type
+      when 'radio'
+        if dom.checked
+          dom.value
+      when 'checkbox'
+        dom.checked
+      when 'number'
+        parseFloat dom.value
+      else
+        dom.value
+
+  getInputDefaultValue: (dom) ->
+    switch dom.type
+      when 'radio'
+        if dom.defaultChecked
+          # dom.value only works when dom.checked is true
+          dom.getAttribute 'value'
+      when 'checkbox'
+        dom.defaultChecked
+      when 'number'
+        parseFloat dom.defaultValue
+      else
+        dom.defaultValue
+
+  setInputValue: (dom, value) ->
+    switch dom.type
+      when 'radio'
+        dom.checked = (value == dom.getAttribute 'value')
+      when 'checkbox'
+        ## Convert to Boolean checked for checkboxes
+        switch value
+          when '1', 'true', true
+            value = true
+          when '0', 'false', false
+            value = false
+          else
+            value = !!value
+        dom.checked = value
+      else
+        dom.value = value
+
   maybeChange: (input, recurse = true, trigger = true) ->
     input = @findInput input
-    if input.value != (value = getInputValue input.dom)
+    if input.value != (value = @getInputValue input.dom)
       input.oldValue = input.value
       input.value = value
       @trigger 'inputChange', input if trigger
@@ -125,7 +120,7 @@ class Furls
     @findInput(input).value
   set: (input, value) ->
     input = @findInput input
-    setInputValue input.dom, value
+    @setInputValue input.dom, value
     @maybeChange input
 
   ## <input>s and <textarea>s should trigger 'input' events during every change,
@@ -153,8 +148,8 @@ class Furls
     unless input.name?
       input.name = input.dom.getAttribute('name') ? input.id
     unless input.defaultValue?
-      input.defaultValue = getDefaultInputValue input.dom
-    input.value = getInputValue input.dom
+      input.defaultValue = @getInputDefaultValue input.dom
+    input.value = @getInputValue input.dom
     input[key] = value for key, value of options if options?
     @inputs.push input
     #(@inputsByName[input.name] ?= []).push input
@@ -198,7 +193,7 @@ class Furls
   getState: ->
     state = {}
     for input in @inputs
-      value = getInputValue input.dom
+      value = @getInputValue input.dom
       ## Avoid overwriting the correct value for radio buttons sharing a name
       if value?
         state[input.name] = value
@@ -207,7 +202,7 @@ class Furls
   getSearch: ->
     search = (
       for input in @inputs
-        value = getInputValue input.dom
+        value = @getInputValue input.dom
         ## Don't store default values
         continue if value == input.defaultValue
         ## Don't store off radio buttons; just need the "on" one
@@ -227,6 +222,15 @@ class Furls
   getRelativeURL: ->
     "#{window.location.pathname}#{@getSearch()}"
 
+  ## Based on jolly.exe's code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+  getParameterByName: (name, search = window.location.search) ->
+    ## https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+    name = name.replace /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"
+    regex = new RegExp "[\\?&]#{name}=([^&#]*)"
+    results = regex.exec search
+    return null unless results?
+    decodeURIComponent results[1].replace /\+/g, " "
+
   loadURL: (url = window.location, trigger = true) ->
     @loading = true
     if url.search?
@@ -239,13 +243,13 @@ class Furls
     ## only put deviation from defaults in the URL.  This needs to be in a
     ## separate stage because of checkboxes.
     for input in @inputs
-      setInputValue input.dom, input.defaultValue
+      @setInputValue input.dom, input.defaultValue
     for input in @inputs
-      value = getParameterByName input.name, search
+      value = @getParameterByName input.name, search
       continue unless value?
       ## Custom decoding
       value = input.decode value if input.decode?
-      setInputValue input.dom, value
+      @setInputValue input.dom, value
     ## Update values and oldValues, and optionally trigger inputChange events
     ## which trigger a stateChange event.
     for input in @inputs
@@ -253,7 +257,7 @@ class Furls
       @maybeChange input, false, trigger
     @trigger 'loadURL', search
     ## Schedule after possibly triggered stateChange event.
-    queueMicrotask => @loading = false
+    @queueMicrotask => @loading = false
     @  # for chaining
 
   setURL: (history = 'push', force) ->
