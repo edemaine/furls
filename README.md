@@ -181,3 +181,6 @@ In addition, you can add the following attributes, either when calling
   Don't worry about URL encoding; the `value` argument will already be
   decoded via `decodeURIComponent` and mapping `+` to space.
   This method gets called with `this` set to the input object.
+* `.minor`: Boolean specifying whether changes to this input should be
+  considered "minor".  If all changed fields are minor, then the `history`
+  mode is forced to be `'replace'`.

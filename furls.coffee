@@ -265,8 +265,17 @@ class Furls
   pushState: (force) -> @setURL 'push', force
 
   syncState: (history = 'push', loadNow = true) ->
-    @on 'stateChange', =>
-      @setURL history unless @loading
+    @on 'stateChange', (changed) =>
+      return if @loading
+      minor = true
+      for name, input of changed
+        unless input.minor
+          minor = false
+          break
+      if minor
+        @setURL 'replace'
+      else
+        @setURL history
     window.addEventListener 'popstate', => @loadURL()
     ## On initial load, treat as transition from undefined values to defaults.
     if loadNow
