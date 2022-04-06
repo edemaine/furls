@@ -136,7 +136,7 @@ class Furls
   getInputEvents: (input) ->
     ['input', 'change']
 
-  addInput: (input) ->
+  addInput: (input, options) ->
     if typeof input == 'string'
       input = id: input
     else if input instanceof HTMLElement
@@ -155,6 +155,7 @@ class Furls
     unless input.defaultValue?
       input.defaultValue = getDefaultInputValue input.dom
     input.value = getInputValue input.dom
+    input[key] = value for key, value of options if options?
     @inputs.push input
     #(@inputsByName[input.name] ?= []).push input
     input.listeners =
@@ -211,6 +212,8 @@ class Furls
         continue if value == input.defaultValue
         ## Don't store off radio buttons; just need the "on" one
         continue unless value?
+        ## Custom encoding
+        value = input.encode value if input.encode?
         ## Stringify booleans for checkboxes
         switch value
           when true
@@ -239,10 +242,10 @@ class Furls
       setInputValue input.dom, input.defaultValue
     for input in @inputs
       value = getParameterByName input.name, search
-      if value?
-        setInputValue input.dom, value
-      else
-        setInputValue input.dom, input.defaultValue
+      continue unless value?
+      ## Custom decoding
+      value = input.decode value if input.decode?
+      setInputValue input.dom, value
     ## Update values and oldValues, and optionally trigger inputChange events
     ## which trigger a stateChange event.
     for input in @inputs

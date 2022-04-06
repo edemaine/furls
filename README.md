@@ -49,7 +49,9 @@ furls = new Furls()        # create input handler
 `<input>` elements can generally be specified by string ID, DOM element,
 or furls' internal representation of the input (see below).
 
-* `.addInput(input)`: Start tracking the specified input.
+* `.addInput(input, [options])`: Start tracking the specified input.
+  Optionally, you can specify manual `encode` and `decode` methods,
+  as described under [Input Objects](#input-objects).
 * `.addInputs(query = 'input, textarea')`: Start tracking all inputs matching
   the specified query selector (a valid input to `document.querySelectorAll`).
   The default `query` includes all `<input>` and `<textarea>` elements
@@ -140,8 +142,8 @@ There are currently two types of events that occur:
 
 ### Input Objects
 
-The internal representation of an input is an object with (at least)
-the following attributes:
+The internal representation of an input (as returned by e.g. `findInput`)
+is an object with (at least) the following attributes:
 
 * `.id`: `id` attribute of the `<input>` element (should be unique)
 * `.type`: `type` attribute of the `<input>` element, or `"textarea"`
@@ -161,3 +163,21 @@ the following attributes:
   For `type=number` inputs, this is automatically parsed into a Number.
 * `.oldValue`: The previous value of the `<input>` element
   (in particular during change events)
+
+In addition, you can add the following attributes, either when calling
+`addInput` or by looking up the input via `findInput` and adding it yourself:
+
+* `.encode(value)`: Encode the specified value into a string for the URL.
+  For example, you can reduce number precision, or replace characters
+  that encode verbosely into characters that encode more succinctly.
+  Don't worry about URL encoding; whatever you return will be further
+  encoded via `encodeURIComponent` and mapping space to `+`.
+  This method gets called with `this` set to the input object.
+* `.decode(value)`: Decode the specified string encoding from the URL into a
+  value for this input.
+  For example, you can undo character encodings you did in `.encode`.
+  If your `.encode` doesn't need special decoding (e.g. it reduced number
+  precision), then you don't need to specify `.decode`.
+  Don't worry about URL encoding; the `value` argument will already be
+  decoded via `decodeURIComponent` and mapping `+` to space.
+  This method gets called with `this` set to the input object.
