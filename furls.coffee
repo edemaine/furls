@@ -66,7 +66,7 @@ class Furls
           dom.value
       when 'checkbox'
         dom.checked
-      when 'number'
+      when 'number', 'range'
         parseFloat dom.value
       else
         dom.value
@@ -79,7 +79,7 @@ class Furls
           dom.getAttribute 'value'
       when 'checkbox'
         dom.defaultChecked
-      when 'number'
+      when 'number', 'range'
         parseFloat dom.defaultValue
       else
         dom.defaultValue
