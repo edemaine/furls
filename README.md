@@ -52,10 +52,11 @@ or furls' internal representation of the input (see below).
 * `.addInput(input, options = {})`: Start tracking the specified input.
   Optionally, you can specify manual `encode` and `decode` methods,
   as described under [Input Objects](#input-objects).
-* `.addInputs(query = 'input, textarea')`: Start tracking all inputs matching
-  the specified query selector (a valid input to `document.querySelectorAll`).
-  The default `query` includes all `<input>` and `<textarea>` elements
-  in the document.
+* `.addInputs(query = 'input, select, textarea')`:
+  Start tracking all inputs matching the specified query selector
+  (a valid input to `document.querySelectorAll`).
+  The default `query` includes all `<input>`, `<select>`, and `<textarea>`
+  elements in the document.
 * `.removeInput(input)`: Stop tracking the specified input.
 * `.removeInputs(query)`: Stop tracking all matching inputs.
   Sometimes it's easier to specify what not to track than what to track.
@@ -148,13 +149,13 @@ You can override them, however, to get custom behaviors.
 * `getParameterByName(name, search = window.location.search)`:
   Returns the value from any `name=value` in the specified URL search string.
   In most cases, you should use `loadURL` which calls this repeatedly.
-* `getInputValue(dom)`: Given an `input` DOM object, computes its current
+* `getInputValue(input)`: Given an `input` object, computes its current
   `value` in the format described under [Input Objects](#input-objects).
   In most cases, you should use `.get` to get the current value.
-* `getInputDefaultValue(dom)`: Given an `input` DOM object, computes its
+* `getInputDefaultValue(input)`: Given an `input` object, computes its
   default `value` in the format described under [Input Objects](#input-objects).
   In most cases, you should use `.findInput` and `.defaultValue`.
-* `setInputValue(dom, value)`: Given an `input` DOM object, sets its `value`
+* `setInputValue(input, value)`: Given an `input` object, sets its `value`
   according to a given value in the format described under
   [Input Objects](#input-objects), without triggering any events.
   In most cases, you should use `.set` to set the value of an input,
@@ -186,6 +187,8 @@ is an object with (at least) the following attributes:
   `undefined` if not selected.
   For `type=number` and `type=range` inputs, this is automatically parsed
   into a `Number`.
+  For `<select multiple>`, this is an array of `<option>` value strings;
+  for a single-value `<select>`, this is a single `<option>` value string.
 * `.oldValue`: The previous value of the `<input>` element
   (in particular during change events)
 

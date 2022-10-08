@@ -55,34 +55,49 @@ class Furls
           return inputObj
       throw new Error "Could not find input given #{input}"
 
-  ## Use .checked for checkboxes and radio buttons, .value for others.
+  ## Use .checked for checkboxes and radio buttons, .value for other inputs.
   ## Radio buttons use `undefined` to denote "not checked", to avoid overwriting
   ## the correct value from the checked button.
   ## Automatically parse value for type=number.
-  getInputValue: (dom) ->
-    switch dom.type
+  ## <select> uses an array of values if `multiple` is set, value otherwise.
+  getInputValue: (input) ->
+    switch input.type
       when 'radio'
-        if dom.checked
-          dom.value
+        if input.dom.checked
+          input.dom.value
       when 'checkbox'
-        dom.checked
+        input.dom.checked
       when 'number', 'range'
-        parseFloat dom.value
+        parseFloat input.dom.value
+      when 'select'
+        if input.dom.multiple
+          for option in input.dom.selectedOptions
+            option.value
+        else
+          input.dom.value
       else
-        dom.value
+        input.dom.value
 
-  getInputDefaultValue: (dom) ->
-    switch dom.type
+  getInputDefaultValue: (input) ->
+    switch input.type
       when 'radio'
-        if dom.defaultChecked
+        if input.dom.defaultChecked
           # dom.value only works when dom.checked is true
-          dom.getAttribute 'value'
+          input.dom.getAttribute 'value'
       when 'checkbox'
-        dom.defaultChecked
+        input.dom.defaultChecked
       when 'number', 'range'
-        parseFloat dom.defaultValue
+        parseFloat input.dom.defaultValue
+      when 'select'
+        multiple = input.dom.multiple
+        for option in input.dom.options
+          continue unless option.defaultSelected
+          if multiple
+            option.value
+          else
+            return option.value
       else
-        dom.defaultValue
+        input.dom.defaultValue
 
   setInputValue: (dom, value) ->
     switch dom.type
@@ -98,12 +113,22 @@ class Furls
           else
             value = !!value
         dom.checked = value
+      when 'select'
+        if input.dom.multiple
+          value = [value] unless Array.isArray value
+          for option in input.dom.options
+            option.selected = (option.value in value)
+        else
+          for option in input.dom.options
+            if option.value == value
+              option.selected = true
+              break
       else
         dom.value = value
 
   maybeChange: (input, recurse = true, trigger = true) ->
     input = @findInput input
-    if input.value != (value = @getInputValue input.dom)
+    if input.value != (value = @getInputValue input)
       input.oldValue = input.value
       input.value = value
       @trigger 'inputChange', input if trigger
@@ -142,14 +167,15 @@ class Furls
       input.id = input.dom.getAttribute 'id'
     unless input.type?
       input.type =
-        switch input.dom.tagName.toUpperCase()
-          when 'TEXTAREA' then 'textarea'
-          when 'INPUT' then input.dom.getAttribute 'type'
+        switch input.dom.tagName.toLowerCase()
+          when 'textarea' then 'textarea'
+          when 'select' then 'select'
+          when 'input' then input.dom.getAttribute('type').toLowerCase()
     unless input.name?
       input.name = input.dom.getAttribute('name') ? input.id
     unless input.defaultValue?
-      input.defaultValue = @getInputDefaultValue input.dom
-    input.value = @getInputValue input.dom
+      input.defaultValue = @getInputDefaultValue input
+    input.value = @getInputValue input
     input[key] = value for key, value of options if options?
     @inputs.push input
     #(@inputsByName[input.name] ?= []).push input
@@ -159,7 +185,7 @@ class Furls
         listener
     @  # for chaining
 
-  addInputs: (selector = 'input, textarea') ->
+  addInputs: (selector = 'input, select, textarea') ->
     if typeof selector == 'string'
       selector = document.querySelectorAll selector
     for input in selector
@@ -193,7 +219,7 @@ class Furls
   getState: ->
     state = {}
     for input in @inputs
-      value = @getInputValue input.dom
+      value = @getInputValue input
       ## Avoid overwriting the correct value for radio buttons sharing a name
       if value?
         state[input.name] = value
@@ -202,7 +228,7 @@ class Furls
   getSearch: ->
     search = (
       for input in @inputs
-        value = @getInputValue input.dom
+        value = @getInputValue input
         ## Don't store default values
         continue if value == input.defaultValue
         ## Don't store off radio buttons; just need the "on" one
