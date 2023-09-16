@@ -41,7 +41,7 @@ class Furls
       listener.call @, ...args
     @  # for chaining
 
-  findInput: (input) ->
+  findInput: (input, noCrash) ->
     ## Support various ways to specify input: internal input object,
     ## string ID of <input> element, or DOM object of <input> element.
     if input.dom?  ## Internal interface
@@ -53,7 +53,13 @@ class Furls
       for inputObj in @inputs
         if inputObj.dom == input
           return inputObj
+      return if noCrash
       throw new Error "Could not find input given #{input}"
+
+  configInput: (input, options) ->
+    input = @findInput input
+    input[key] = value for key, value of options if options?
+    @  # for chaining
 
   ## Use .checked for checkboxes and radio buttons, .value for other inputs.
   ## Radio buttons use `undefined` to denote "not checked", to avoid overwriting
@@ -157,6 +163,8 @@ class Furls
     ['input', 'change']
 
   addInput: (input, options) ->
+    if @findInput input, true
+      return @configInput input, options
     if typeof input == 'string'
       input = id: input
     else if input instanceof HTMLElement
@@ -176,7 +184,7 @@ class Furls
     unless input.defaultValue?
       input.defaultValue = @getInputDefaultValue input
     input.value = @getInputValue input
-    input[key] = value for key, value of options if options?
+    @configInput input, options
     @inputs.push input
     #(@inputsByName[input.name] ?= []).push input
     input.listeners =

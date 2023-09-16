@@ -49,14 +49,19 @@ furls = new Furls()        # create input handler
 `<input>` elements can generally be specified by string ID, DOM element,
 or furls' internal representation of the input (see below).
 
-* `.addInput(input, options = {})`: Start tracking the specified input.
-  Optionally, you can specify manual `encode` and `decode` methods,
-  as described under [Input Objects](#input-objects).
 * `.addInputs(query = 'input, select, textarea')`:
   Start tracking all inputs matching the specified query selector
   (a valid input to `document.querySelectorAll`).
   The default `query` includes all `<input>`, `<select>`, and `<textarea>`
   elements in the document.
+* `.configInput(input, options)`: Modify the `encode` and `decode` methods,
+  or `minor` attribute, as described under [Input Objects](#input-objects),
+  for an already added input.  Useful after bulk `.addInputs()`
+  to configure a specific input.
+* `.addInput(input, options = {})`: Start tracking the specified input.
+  Optionally, you can specify manual `encode` and `decode` methods,
+  or `minor` attribute, as described under [Input Objects](#input-objects).
+  Degenerates to `.configInput` if `input` is already tracked.
 * `.removeInput(input)`: Stop tracking the specified input.
 * `.removeInputs(query)`: Stop tracking all matching inputs.
   Sometimes it's easier to specify what not to track than what to track.
@@ -192,8 +197,8 @@ is an object with (at least) the following attributes:
 * `.oldValue`: The previous value of the `<input>` element
   (in particular during change events)
 
-In addition, you can add the following attributes, either when calling
-`addInput` or by looking up the input via `findInput` and adding it yourself:
+In addition, you can add the following attributes, via `configInput` or
+when calling `addInput`:
 
 * `.encode(value)`: Encode the specified value into a string for the URL.
   For example, you can reduce number precision, or replace characters
