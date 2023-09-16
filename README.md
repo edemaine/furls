@@ -124,7 +124,7 @@ or furls' internal representation of the input (see below).
 * `.trigger(event, ...)`: Force `event` to occur with specified arguments.
   (You probably shouldn't need this.)
 
-There are currently two types of events that occur:
+There are currently three types of events that occur:
 
 * `'inputChange'`: An input changed in value.  (Null changes don't count.)
   Argument is the internal representation of the input (see below).
