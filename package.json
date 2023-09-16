@@ -1,6 +1,6 @@
 {
   "name": "furls",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Synchronize form state (and other state) with URL",
   "main": "furls.js",
   "scripts": {
