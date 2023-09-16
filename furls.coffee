@@ -278,14 +278,18 @@ class Furls
     ## separate stage because of checkboxes.
     for input in @inputs
       @setInputValue input.dom, input.defaultValue
-    for input in @inputs
-      value = @getParameterByName input.name, search
-      continue unless value?
-      ## Custom decoding
-      value = input.decode value if input.decode?
-      @setInputValue input.dom, value
-    ## Update values and oldValues, and optionally trigger inputChange events
-    ## which trigger a stateChange event.
+    ## Do custom decoding in a separate phase after inputs without
+    ## custom decoding, so that custom decoding can depend on those inputs.
+    for customDecode in [false, true]
+      for input in @inputs when input.decode? == customDecode
+        value = @getParameterByName input.name, search
+        continue unless value?
+        value = input.decode value if input.decode?
+        @setInputValue input.dom, value
+        ## Update value and oldValue, and optionally trigger inputChange event
+        ## which eventually triggers a stateChange event.
+        ## Don't recurse on identically named inputs, as we process all inputs.
+        @maybeChange input, false, trigger
     for input in @inputs
       ## Don't recurse on identically named inputs, as we process all inputs.
       @maybeChange input, false, trigger

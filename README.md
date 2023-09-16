@@ -217,3 +217,25 @@ when calling `addInput`:
 * `.minor`: Boolean specifying whether changes to this input should be
   considered "minor".  If all changed fields are minor, then the `history`
   mode is forced to be `'replace'`.
+
+You can make your custom encoding and decoding methods depend on the state of
+other inputs (using e.g. `furls.get()` or `furls.getState()`), provided those
+inputs do not also have custom encodings (otherwise the decoding order would
+be unclear).  Specifically, when loading an entire URL (via `loadURL` or on
+startup with `syncState`), all inputs without custom decoding are loaded
+first, so that the inputs with custom decoding can depend on them.
+For example, here is how you could add optional ROT47 encoding/decoding
+to a `text` input:
+
+```coffee
+furls.configInput 'text',
+  encode: rot47 = (s) ->
+    return s unless furls.get 'rot'
+    s.split ''
+    .map (c) =>
+      code = c.charCodeAt(0)
+      return c unless 33 <= code <= 126
+      String.fromCharCode 33 + (code + 14) % 94
+    .join ''
+  decode: rot47
+```
