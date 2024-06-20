@@ -283,8 +283,10 @@ class Furls
     for customDecode in [false, true]
       for input in @inputs when input.decode? == customDecode
         value = @getParameterByName input.name, search
-        continue unless value?
-        value = input.decode value if input.decode?
+        if value?
+          value = input.decode value if input.decode?
+        else
+          value = input.defaultValue
         @setInputValue input.dom, value
         ## Update value and oldValue, and optionally trigger inputChange event
         ## which eventually triggers a stateChange event.
