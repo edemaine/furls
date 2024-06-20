@@ -79,16 +79,23 @@ or furls' internal representation of the input (see below).
   browsers, but you could override this function to listen for custom DOM
   events.  Redundant events are coalesced so they generate only one furls
   `inputChange` events.
+* `.isCommitChange(input)`: Detect whether the last change event for input
+  `input` is a `'change'` (commit) event rather than an `'input'` input,
+  for inputs supporting both events (and `true` otherwise).
+  If you add events to `.getInputEvents`, you might need to change this too.
 
 ### States / URL Synchronization
 
-* `.syncState(history = 'push', loadNow = true)`: Automatically keep the
+* `.syncState(history = 'auto', loadNow = true)`: Automatically keep the
   document's URL's search component in sync with the state of the inputs.
   When a form changes input, the new URL either gets "pushed" (when `history`
-  is `'push'`, so the back button returns to the previous state) or
-  "replaced" (when `history` is `'replace'`, so the back button leaves the
-  page).  See [the difference between `pushState` and
+  is `'push'`, so the back button returns to the previous state) or "replaced"
+  (when `history` is `'replace'`, so the back button leaves the page).
+  See [the difference between `pushState` and
   `replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History_API).
+  When `history` is the default setting of `'auto'`, toggling checkboxes etc.
+  pushes the URL, while editing text fields pushes only after the user
+  defocuses the textbox (thereby "committing" the change).
   `loadNow` specifies whether to immediately set the inputs' state according
   to the current URL's search component (default `true`).
 * `.loadURL(url = document.location, trigger = true)`: Manually set the
@@ -196,6 +203,11 @@ is an object with (at least) the following attributes:
   for a single-value `<select>`, this is a single `<option>` value string.
 * `.oldValue`: The previous value of the `<input>` element
   (in particular during change events)
+* `.lastEvent`: Last DOM event for the change of this input
+  (as limited by [`getInputEvents`](#inputs)),
+  or `'set'` if it was last changed by [`.set()`](#inputs),
+  or `'load'` if it was last changed by
+  [`.loadURL()`](#states--url-synchronization) (including browser navigation).
 
 In addition, you can add the following attributes, via `configInput` or
 when calling `addInput`:

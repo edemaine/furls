@@ -144,13 +144,16 @@ class Furls
         #for input2 in @inputsByName[input.name] when input != input2
         for input2 in @inputs
           if input2.name == input.name and input != input2
+            input2.lastEvent = input.lastEvent
             @maybeChange input2, false
+    input.committed = input.value if @isCommitChange input
     @  # for chaining
 
   get: (input) ->
     @findInput(input).value
   set: (input, value) ->
     input = @findInput input
+    input.lastEvent = 'set'
     @setInputValue input.dom, value
     @maybeChange input
 
@@ -161,6 +164,14 @@ class Furls
   ## So check for both, and just ignore the event if nothing changed.
   getInputEvents: (input) ->
     ['input', 'change']
+
+  ## Detect whether the last change to an input is a "commit":
+  ## a 'change' event instead of an 'input' event, on inputs supporting both.
+  ## (True for inputs not supporting both, and string events like "set".)
+  isCommitChange: (input) ->
+    input.type in ['select', 'radio', 'checkbox', 'button', 'submit', 'reset'] or
+    typeof input.lastEvent == 'string' or
+    input.lastEvent?.type == 'change'
 
   addInput: (input, options) ->
     if @findInput input, true
@@ -183,13 +194,15 @@ class Furls
       input.name = input.dom.getAttribute('name') ? input.id
     unless input.defaultValue?
       input.defaultValue = @getInputDefaultValue input
-    input.value = @getInputValue input
+    input.value = input.committed = @getInputValue input
     @configInput input, options
     @inputs.push input
     #(@inputsByName[input.name] ?= []).push input
     input.listeners =
       for event in @getInputEvents input
-        input.dom.addEventListener event, listener = => @maybeChange input
+        input.dom.addEventListener event, listener = (e) =>
+          input.lastEvent = e
+          @maybeChange input
         listener
     @  # for chaining
 
@@ -278,6 +291,7 @@ class Furls
     ## separate stage because of checkboxes.
     for input in @inputs
       @setInputValue input.dom, input.defaultValue
+      input.lastEvent = 'load'
     ## Do custom decoding in a separate phase after inputs without
     ## custom decoding, so that custom decoding can depend on those inputs.
     for customDecode in [false, true]
@@ -308,16 +322,22 @@ class Furls
   replaceState: (force) -> @setURL 'replace', force
   pushState: (force) -> @setURL 'push', force
 
-  syncState: (history = 'push', loadNow = true) ->
+  syncState: (history = 'auto', loadNow = true) ->
     @on 'stateChange', (changed) =>
       return if @loading
+      ## Check whether all changes are minor, and force 'replace' in that case.
       minor = true
       for name, input of changed
-        unless input.minor
+        unless input.minor or (
+          history == 'auto' and
+          input.committed not in [input.oldValue, input.value]
+        )
           minor = false
           break
       if minor
         @setURL 'replace'
+      else if history == 'auto'
+        @setURL 'push'
       else
         @setURL history
     window.addEventListener 'popstate', => @loadURL()
