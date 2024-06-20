@@ -1,6 +1,6 @@
 {
   "name": "furls",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Synchronize form state (and other state) with URL",
   "main": "furls.js",
   "scripts": {
@@ -13,7 +13,7 @@
   "author": {
     "name": "Erik Demaine",
     "email": "edemaine@mit.edu",
-    "url": "http://erikdemaine.org/"
+    "url": "https://erikdemaine.org/"
   },
   "license": "MIT",
   "bugs": {
